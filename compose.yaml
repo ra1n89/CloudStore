@@ -1,0 +1,34 @@
+name: cloudstorage
+
+services:
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root  # Имя пользователя
+      POSTGRES_PASSWORD: root  # Пароль для суперпользователя
+      POSTGRES_DB: mydatabase  # Имя базы данных
+    ports:
+      - "5433:5432"  # Проброс порта 5432 на хост
+    volumes:
+      - postgres_data:/var/lib/postgresql/data  # Том для хранения данных
+  redis:
+    image: redis:latest
+    ports:
+    - "6379:6379"  # Проброс порта 6379 на хост
+  minio:
+    image: minio/minio:latest
+    environment:
+      MINIO_ROOT_USER: root
+      MINIO_ROOT_PASSWORD: rootroot
+    command: server /minio --console-address :9090
+    ports:
+      - "9000:9000"  # Проброс порта 9000 на хост
+      - "9090:9090" #
+    volumes:
+      - minio_data:/minio  # Том для хранения данных
+
+volumes:
+  postgres_data:
+     # Определение тома для хранения данных
+  minio_data:
+    driver: local

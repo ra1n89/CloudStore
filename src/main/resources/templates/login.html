@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="UTF-8">
-  <title>$Title$</title>
+  <title>Вход в систему</title>
+  <!-- Подключение стилей (опционально) -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
 </head>
-<body>
-$END$
+<body class="bg-light d-flex justify-content-center align-items-center" style="height: 100vh;">
+<div class="card p-4" style="width: 300px;">
+  <h2 class="text-center mb-4">Вход</h2>
+  <!-- Отображение сообщений об ошибках -->
+  <div th:if="${param.error}" class="alert alert-danger">
+    Неверное имя пользователя или пароль.
+  </div>
+  <div th:if="${param.logout}" class="alert alert-success">
+    Вы успешно вышли из системы.
+  </div>
+  <!-- Форма входа -->
+  <form th:action="@{/login}" method="post">
+    <div class="mb-3">
+      <label for="username" class="form-label">Имя пользователя:</label>
+      <input type="text" id="username" name="username" class="form-control" required autofocus>
+    </div>
+    <div class="mb-3">
+      <label for="password" class="form-label">Пароль:</label>
+      <input type="password" id="password" name="password" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-primary w-100">Войти</button>
+  </form>
+</div>
 </body>
 </html>
