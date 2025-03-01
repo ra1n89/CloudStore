@@ -1,4 +1,4 @@
-name: cloudstorage
+version: '3.8'
 
 services:
   database:
@@ -11,24 +11,33 @@ services:
       - "5433:5432"  # Проброс порта 5432 на хост
     volumes:
       - postgres_data:/var/lib/postgresql/data  # Том для хранения данных
+    networks:
+      - cloudstorage-network
+
   redis:
     image: redis:latest
     ports:
-    - "6379:6379"  # Проброс порта 6379 на хост
+      - "6379:6379"  # Проброс порта 6379 на хост
+    networks:
+      - cloudstorage-network
+
   minio:
     image: minio/minio:latest
     environment:
-      MINIO_ROOT_USER: root
-      MINIO_ROOT_PASSWORD: rootroot
-    command: server /minio --console-address :9090
+      MINIO_ROOT_USER: root  # Логин для MinIO
+      MINIO_ROOT_PASSWORD: rootroot  # Пароль для MinIO
+    command: server /data --console-address ":9090"  # Исправлено на /data
     ports:
-      - "9000:9000"  # Проброс порта 9000 на хост
-      - "9090:9090" #
+      - "9000:9000"  # Проброс порта 9000 на хост (API)
+      - "9090:9090"  # Проброс порта 9090 на хост (Console)
     volumes:
-      - minio_data:/minio  # Том для хранения данных
+      - minio_data:/data  # Исправлено на /data
+    networks:
+      - cloudstorage-network
 
 volumes:
-  postgres_data:
-     # Определение тома для хранения данных
-  minio_data:
-    driver: local
+  postgres_data:  # Том для хранения данных PostgreSQL
+  minio_data:  # Том для хранения данных MinIO
+
+networks:
+  cloudstorage-network:  # Создание сети для контейнеров

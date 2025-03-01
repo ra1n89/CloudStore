@@ -1,29 +1,27 @@
 package ru.CloudStorage.controller;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import ru.CloudStorage.models.CustomUser;
 import ru.CloudStorage.service.MinioService;
 
-import java.util.List;
-
 @Controller
-public class HomeController {
+public class FolderController {
 
     private final MinioService minioService;
 
     @Autowired
-    public HomeController(MinioService minioService) {
+    public FolderController(MinioService minioService) {
         this.minioService = minioService;
     }
 
-    @GetMapping("/")
-    public String homePage(Model model, @RequestParam(required = false, defaultValue = "") String path) {
-        System.out.println(path);
+    @PostMapping("/create-folder")
+    public String createFolder(@RequestParam String folderName) {
+
         CustomUser customerUser = (CustomUser) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
@@ -34,17 +32,16 @@ public class HomeController {
         try {
 
 
-            // Получаем список файлов и папок
-            List<String> filesAndFolders = minioService.listUserFiles(userId, path);
+            // Вызываем метод создания папки
+            minioService.createFolder(userId, folderName);
 
-            // Передаем список в шаблон
-            model.addAttribute("filesAndFolders", filesAndFolders);
-            model.addAttribute("currentPath", path);
+            // Перенаправляем пользователя на страницу с сообщением об успехе
+            return "redirect:/success?message=Folder created successfully!";
         } catch (Exception e) {
             e.printStackTrace();
-            model.addAttribute("error", "Error loading files: " + e.getMessage());
-
+            // Перенаправляем пользователя на страницу с сообщением об ошибке
+            return "redirect:/error?message=Error creating folder: " + e.getMessage();
         }
-        return "home";
     }
 }
+
