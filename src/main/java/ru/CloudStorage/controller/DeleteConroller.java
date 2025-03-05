@@ -21,20 +21,17 @@ public class DeleteConroller {
                 .getAuthentication()
                 .getPrincipal();
         Long userId = customerUser.getId();
+        String userPrefix = "user-" + userId + "-files/";
 
         // Формируем полный путь к объекту в MinIO
-        String fullPath = "user-" + userId + "-files/" + path;
+        String fullPath = path;
 
         // Удаляем объект (файл или папку)
        
+        minioService.deleteFile(userId, fullPath);
 
-        minioClient.removeObject(
-                RemoveObjectArgs.builder()
-                        .bucket(bucketName)
-                        .object(fullPath)
-                        .build());
 
         // Перенаправляем пользователя на текущую страницу
-        return "redirect:/?path=" + currentPath;
+        return "redirect:/?path=" + userPrefix ;
     }
 }

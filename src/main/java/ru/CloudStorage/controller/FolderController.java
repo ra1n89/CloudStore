@@ -20,7 +20,7 @@ public class FolderController {
     }
 
     @PostMapping("/create-folder")
-    public String createFolder(@RequestParam String folderName) {
+    public String createFolder(@RequestParam("currentPath") String currentPath, @RequestParam("folderName") String folderName) {
 
         CustomUser customerUser = (CustomUser) SecurityContextHolder.getContext()
                 .getAuthentication()
@@ -33,7 +33,7 @@ public class FolderController {
 
 
             // Вызываем метод создания папки
-            minioService.createFolder(userId, folderName);
+            minioService.createFolder(userId, folderName, currentPath);
 
             // Перенаправляем пользователя на страницу с сообщением об успехе
             return "redirect:/success?message=Folder created successfully!";

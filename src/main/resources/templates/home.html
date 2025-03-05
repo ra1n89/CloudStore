@@ -1,13 +1,11 @@
 <!DOCTYPE html>
-
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Drag and Drop File Upload</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta charset="utf-8">
-
     <link rel="stylesheet" href="/main.css">
 </head>
-
 <body>
 <div class="drop-zone">
     <span class="drop-zone__prompt">Drop file here or click to upload</span>
@@ -18,10 +16,10 @@
 <div class="breadcrumb">
     <a th:href="@{/(path='')}">Home</a>
     <span th:each="part, iter : ${#strings.arraySplit(currentPath, '/')}">
-            <span th:if="${part}">
-                &gt; <a th:href="@{/(path=${#strings.substring(currentPath, 0, #strings.indexOf(currentPath, part) + part.length())})}" th:text="${part}"></a>
-            </span>
+        <span th:if="${part}">
+            &gt; <a th:href="@{/(path=${#strings.substring(currentPath, 0, #strings.indexOf(currentPath, part) + part.length())})}" th:text="${part}"></a>
         </span>
+    </span>
 </div>
 
 <!-- Сообщение об ошибке -->
@@ -33,22 +31,47 @@
 <ul>
     <li th:each="item : ${filesAndFolders}">
         <span th:if="${item.endsWith('/')}" class="folder">
-            <a th:href="@{/(path=${currentPath + item})}" th:text="${item}"></a>
-            <a th:href="@{/delete(path=${currentPath + item})}" onclick="return confirm('Are you sure you want to delete this folder?')">[Delete]</a>
+            <a th:href="@{/(userId=${userId}, path=${currentPath.endsWith('/') ? currentPath + item : currentPath + '/' + item})}" th:text="${item}"></a>
+            <a th:href="@{/delete(userId=${userId}, path=${currentPath + item})}" onclick="return confirm('Are you sure you want to delete this folder?')">[Delete]</a>
+            <button type="button" th:data-path="${currentPath + item}" onclick="openRenameModal(this)">[Rename]</button>
+            <button type="button" th:data-path="${currentPath + item}" onclick="openMoveModal(this)">[Move]</button>
         </span>
         <span th:unless="${item.endsWith('/')}" class="file">
-            <a th:href="@{/download(path=${item})}" th:text="${item}"></a>
-            <a th:href="@{/delete(path=${item})}" onclick="return confirm('Are you sure you want to delete this file?')">[Delete]</a>
+            <a th:href="@{/download(userId=${userId}, path=${item})}" th:text="${item}"></a>
+            <a th:href="@{/delete(userId=${userId}, path=${currentPath + item})}" onclick="return confirm('Are you sure you want to delete this file?')">[Delete]</a>
+            <button type="button" th:data-path="${currentPath + item}" onclick="openRenameModal(this)">[Rename]</button>
+            <button type="button" th:data-path="${currentPath + item}" onclick="openMoveModal(this)">[Move]</button>
         </span>
     </li>
 </ul>
 
-<!-- Кнопка для создания папки -->
-<a href="#modal">Create Folder</a>
+<button onclick="openCreateFolderModal()">Create Folder</button>
 
-<!-- Модальное окно для создания папки -->
-<div id="modal" class="modal">
-    <span class="close"><a href="#">&times;</a></span>
+<!-- Модальные окна -->
+<div id="renameModal" class="modal">
+    <span class="close"><a href="#" onclick="closeModal('renameModal')">&times;</a></span>
+    <h2>Enter New Name</h2>
+    <form action="/rename" method="POST">
+        <input type="hidden" name="path" id="renamePath">
+        <label for="newName">New Name:</label>
+        <input type="text" id="newName" name="newPath" required>
+        <button type="submit">Rename</button>
+    </form>
+</div>
+
+<div id="moveModal" class="modal">
+    <span class="close"><a href="#" onclick="closeModal('moveModal')">&times;</a></span>
+    <h2>Enter New Path</h2>
+    <form action="/move" method="POST">
+        <input type="hidden" name="path" id="movePath">
+        <label for="newPath">New Path:</label>
+        <input type="text" id="newPath" name="newPath" required>
+        <button type="submit">Move</button>
+    </form>
+</div>
+
+<div id="createFolderModal" class="modal">
+    <span class="close"><a href="#" onclick="closeModal('createFolderModal')">&times;</a></span>
     <h2>Enter Folder Name</h2>
     <form action="/create-folder" method="POST">
         <input type="hidden" name="currentPath" th:value="${currentPath}">
@@ -58,6 +81,6 @@
     </form>
 </div>
 
-<!-- Затемнение фона -->
-<div class="overlay"></div>
+<script src="/main.js"></script>
 </body>
+</html>

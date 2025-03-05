@@ -100,3 +100,41 @@ function uploadFile(file) {
             alert("Error uploading file.");
         });
 }
+
+
+
+    function openRenameModal(button) {
+    const path = button.getAttribute('data-path');
+    const modal = document.getElementById('renameModal');
+    const form = modal.querySelector('form');
+    form.querySelector('input[name="path"]').value = path;
+    modal.style.display = 'block';
+}
+
+    function openMoveModal(button) {
+    const path = button.getAttribute('data-path');
+    const modal = document.getElementById('moveModal');
+    const form = modal.querySelector('form');
+    form.querySelector('input[name="path"]').value = path;
+    modal.style.display = 'block';
+}
+
+    function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+
+function openCreateFolderModal() {
+    document.getElementById('createFolderModal').style.display = 'block';
+}
+document.querySelectorAll('[href="#renameModal"]').forEach(button => {
+    button.addEventListener('click', () => {
+        document.getElementById('renameModal').style.display = 'block';
+    });
+});
+
+document.querySelectorAll('[href="#moveModal"]').forEach(button => {
+    button.addEventListener('click', () => {
+        document.getElementById('moveModal').style.display = 'block';
+    });
+});
+
