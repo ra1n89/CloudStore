@@ -7,10 +7,10 @@ import java.util.Collection;
 
 public class CustomUser extends User {
 
-    private final Long id; // Дополнительное поле: ID пользователя
+    private final Long id;
 
     public CustomUser(Long id, String username, String password, Collection<? extends GrantedAuthority> authorities) {
-        super(username, password, authorities); // Вызов конструктора родительского класса
+        super(username, password, authorities);
         this.id = id;
     }
 
@@ -22,6 +22,6 @@ public class CustomUser extends User {
     }
 
     public Long getId() {
-        return id; // Геттер для ID
+        return id;
     }
 }

@@ -18,7 +18,6 @@ public class ExceptionHandlerController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-
     @ExceptionHandler(MinioFileUploadException.class)
     public ResponseEntity<?> handleMinioFileUploadException(MinioFileUploadException e) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

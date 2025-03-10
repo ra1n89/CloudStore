@@ -1,7 +1,5 @@
 package ru.CloudStorage.exception;
 
-import java.io.IOException;
-
 public class CustomIoException extends Throwable {
     public CustomIoException() {
         super();

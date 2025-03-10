@@ -26,17 +26,11 @@ public class UploadController {
                 .getAuthentication()
                 .getPrincipal();
 
-        Long userId = customerUser.getId(); // Получаем ID пользователя
+        Long userId = customerUser.getId();
         System.out.println("userId: " + userId);
 
-        //try {
-            minioService.uploadFile(file, userId);
-
-//            return ResponseEntity.ok("{\"message\": \"File uploaded successfully!\"}");
-//        } catch (Exception e) {
-//            e.printStackTrace();
+        minioService.uploadFile(file, userId);
         return ResponseEntity.ok("{\"message\": \"File uploaded successfully!\"}");
-//        }
     }
 }
 

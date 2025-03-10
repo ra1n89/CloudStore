@@ -1,7 +1,5 @@
 package ru.CloudStorage.exception;
 
-import io.minio.errors.MinioException;
-
 public class MinioFileUploadException extends Throwable {
     public MinioFileUploadException() {
         super();

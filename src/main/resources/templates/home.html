@@ -12,7 +12,6 @@
     <input type="file" name="myFile" class="drop-zone__input">
 </div>
 
-<!-- Хлебные крошки для навигации -->
 <div class="breadcrumb">
     <a th:href="@{/(path='')}">Home</a>
     <span th:each="part, iter : ${#strings.arraySplit(currentPath, '/')}">
@@ -22,12 +21,10 @@
     </span>
 </div>
 
-<!-- Сообщение об ошибке -->
 <div th:if="${error}" style="color: red;">
     <p th:text="${error}"></p>
 </div>
 
-<!-- Список файлов и папок -->
 <ul>
     <li th:each="item : ${filesAndFolders}">
         <span th:if="${item.endsWith('/')}" class="folder">
@@ -47,7 +44,6 @@
 
 <button onclick="openCreateFolderModal()">Create Folder</button>
 
-<!-- Модальные окна -->
 <div id="renameModal" class="modal">
     <span class="close"><a href="#" onclick="closeModal('renameModal')">&times;</a></span>
     <h2>Enter New Name</h2>

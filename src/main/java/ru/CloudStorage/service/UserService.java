@@ -30,19 +30,19 @@ public class UserService implements UserDetailsService {
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findUserByUsername(username);
-        return new CustomUser(user.getId(), user.getUsername(), user.getPassword(),  Collections.emptyList());
+        return new CustomUser(user.getId(), user.getUsername(), user.getPassword(), Collections.emptyList());
 
     }
 
-     public void registerUser(String username, String rawPassword){
-         log.warn("Registering user: {}", username); // Логируем имя пользователя
-         String encodedPassword = passwordEncoder.encode(rawPassword);
+    public void registerUser(String username, String rawPassword) {
+        log.warn("Registering user: {}", username);
+        String encodedPassword = passwordEncoder.encode(rawPassword);
 
-         User user = new User();
-         user.setUsername(username);
-         user.setPassword(encodedPassword);
-         userRepository.saveAndFlush(user);
-         log.warn("User registered successfully: {}", username); // Логируем успешную регистрацию
+        User user = new User();
+        user.setUsername(username);
+        user.setPassword(encodedPassword);
+        userRepository.saveAndFlush(user);
+        log.warn("User registered successfully: {}", username);
     }
 
 }

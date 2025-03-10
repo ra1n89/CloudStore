@@ -6,6 +6,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import ru.CloudStorage.exception.MinioFolderCreateException;
 import ru.CloudStorage.models.CustomUser;
 import ru.CloudStorage.service.MinioService;
 
@@ -20,28 +21,17 @@ public class FolderController {
     }
 
     @PostMapping("/create-folder")
-    public String createFolder(@RequestParam("currentPath") String currentPath, @RequestParam("folderName") String folderName) {
+    public String createFolder(@RequestParam("currentPath") String currentPath, @RequestParam("folderName") String folderName) throws MinioFolderCreateException, Exception {
 
         CustomUser customerUser = (CustomUser) SecurityContextHolder.getContext()
                 .getAuthentication()
                 .getPrincipal();
 
-        Long userId = customerUser.getId(); // Получаем ID пользователя
+        Long userId = customerUser.getId();
         System.out.println("userId: " + userId);
+        minioService.createFolder(userId, folderName, currentPath);
 
-        try {
+        return "redirect:/success?message=Folder created successfully!";
 
-
-            // Вызываем метод создания папки
-            minioService.createFolder(userId, folderName, currentPath);
-
-            // Перенаправляем пользователя на страницу с сообщением об успехе
-            return "redirect:/success?message=Folder created successfully!";
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Перенаправляем пользователя на страницу с сообщением об ошибке
-            return "redirect:/error?message=Error creating folder: " + e.getMessage();
-        }
     }
 }
-

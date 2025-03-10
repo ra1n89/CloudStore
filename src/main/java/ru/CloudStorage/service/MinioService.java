@@ -3,20 +3,16 @@ package ru.CloudStorage.service;
 import io.minio.*;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
-import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import ru.CloudStorage.exception.CustomIoException;
-import ru.CloudStorage.exception.GeneralException;
-import ru.CloudStorage.exception.MinioFileUploadException;
+import ru.CloudStorage.exception.*;
+import ru.CloudStorage.utils.MinioUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,16 +30,9 @@ public class MinioService {
     public void uploadFile(MultipartFile file, Long userId) throws MinioFileUploadException, CustomIoException {
         try (InputStream inputStream = file.getInputStream()) {
 
-            boolean found =
-                    minioClient.bucketExists(BucketExistsArgs.builder().bucket("user-files").build());
-            if (!found) {
+            MinioUtils.isRootFolderExists(minioClient);
 
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket("user-files").build());
-            } else {
-                System.out.println("Bucket 'user-files' already exists.");
-            }
-
-            String objectPath = "user-" + userId + "-files"  + "/" + file.getOriginalFilename();
+            String objectPath = "user-" + userId + "-files" + "/" + file.getOriginalFilename();
 
             minioClient.putObject(
                     PutObjectArgs.builder()
@@ -61,51 +50,35 @@ public class MinioService {
         }
     }
 
-    public InputStream downloadFile(Long userId, String fullPath) throws Exception {
+    public InputStream downloadFile(Long userId, String fullPath) throws MinioFileDownloadException, CustomIoException {
         InputStream inputStream;
-        try  {
-            boolean found =
-                    minioClient.bucketExists(BucketExistsArgs.builder().bucket("user-files").build());
-            if (!found) {
+        try {
+            MinioUtils.isRootFolderExists(minioClient);
 
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket("user-files").build());
-            } else {
-                System.out.println("Bucket 'user-files' already exists.");
-            }
-
-            //String fullPath = "user-" + userId + "-files"  + "/" + file.getOriginalFilename();
-
-             inputStream = minioClient.getObject(
+            inputStream = minioClient.getObject(
                     GetObjectArgs.builder()
                             .bucket(bucketName)
                             .object(fullPath)
                             .build());
 
         } catch (MinioException e) {
-            throw new Exception("Error uploading file to MinIO", e);
+            throw new MinioFileDownloadException("Error uploading file to MinIO: MinioException", e);
+        } catch (IOException e) {
+            throw new CustomIoException("Error uploading file to MinIO: IOException", e);
+        } catch (Exception e) {
+            throw new GeneralException("Unknown Error", e);
         }
         return inputStream;
     }
 
-    public void deleteFile(Long userId, String fullPath) throws Exception {
+    public void deleteFile(Long userId, String fullPath) throws Exception, MinioFileDeleteException {
 
-        try  {
-            boolean found =
-                    minioClient.bucketExists(BucketExistsArgs.builder().bucket("user-files").build());
-            if (!found) {
-
-                minioClient.makeBucket(MakeBucketArgs.builder().bucket("user-files").build());
-            } else {
-                System.out.println("Bucket 'user-files' already exists.");
-            }
-
-            //String fullPath = "user-" + userId + "-files"  + "/" + file.getOriginalFilename();
+        try {
+            MinioUtils.isRootFolderExists(minioClient);
 
             if (fullPath.endsWith("/")) {
-                // Удаляем все объекты с этим префиксом
                 deleteFolderContents("user-files", fullPath);
             } else {
-                // Удаляем конкретный файл
                 minioClient.removeObject(
                         RemoveObjectArgs.builder()
                                 .bucket("user-files")
@@ -115,17 +88,18 @@ public class MinioService {
             }
 
         } catch (MinioException e) {
-            throw new Exception("Error uploading file to MinIO", e);
+            throw new MinioFileDeleteException("Error deleting file or folder from MinIO: MinioException", e);
+        } catch (Exception e) {
+            throw new GeneralException("Unknown Error", e);
         }
-
     }
 
-    public void createFolder(Long userId, String folderName, String currentPath) throws Exception {
+    public void createFolder(Long userId, String folderName, String currentPath) throws Exception, MinioFolderCreateException {
         try {
-            // Формируем путь к папке
+            MinioUtils.isRootFolderExists(minioClient);
+
             String folderPath = currentPath + "/" + folderName + "/";
 
-            // Создаем пустой объект с именем, заканчивающимся на "/"
             minioClient.putObject(
                     PutObjectArgs.builder()
                             .bucket(bucketName)
@@ -136,20 +110,22 @@ public class MinioService {
 
             System.out.println("Folder created: " + folderPath);
         } catch (MinioException e) {
-            throw new Exception("Error creating folder in MinIO", e);
+            throw new MinioFolderCreateException("Error creating folder in MinIO: MinioException", e);
+        } catch (Exception e) {
+            throw new GeneralException("Unknown Error", e);
         }
     }
 
-    public void renameFileOrFolder(Long userId, String oldPath, String newPath) throws Exception {
+    public void renameFileOrFolder(Long userId, String oldPath, String newPath) throws Exception, MinioRenameException {
         try {
-            // Проверяем, существует ли старый объект
+            MinioUtils.isRootFolderExists(minioClient);
+
             minioClient.statObject(
                     StatObjectArgs.builder()
                             .bucket(bucketName)
                             .object(oldPath)
                             .build());
 
-            // Копируем объект с новым именем
             minioClient.copyObject(
                     CopyObjectArgs.builder()
                             .bucket(bucketName)
@@ -157,7 +133,6 @@ public class MinioService {
                             .source(CopySource.builder().bucket(bucketName).object(oldPath).build())
                             .build());
 
-            // Удаляем старый объект
             minioClient.removeObject(
                     RemoveObjectArgs.builder()
                             .bucket(bucketName)
@@ -166,45 +141,39 @@ public class MinioService {
 
             System.out.println("Renamed from " + oldPath + " to " + newPath);
         } catch (MinioException e) {
-            throw new Exception("Error renaming file or folder in MinIO", e);
+            throw new MinioRenameException("Error renaming item in MinIO: MinioException", e);
+        } catch (Exception e) {
+            throw new GeneralException("Unknown Error", e);
         }
     }
 
-    public void moveFileOrFolder(Long userId, String oldPath, String newPath) throws Exception {
+    public void moveFileOrFolder(Long userId, String oldPath, String newPath) throws Exception, MinioRenameException {
         renameFileOrFolder(userId, oldPath, newPath);
     }
 
     public List<String> listUserFiles(Long userId, String path) throws Exception {
 
-
-
         List<String> filesAndFolders = new ArrayList<>();
         try {
-            // Формируем префикс для поиска объектов пользователя
-            //String prefix = "user-" + userId + "-files"  + "/" + path;
             String fullPath;
             String userPrefix = "user-" + userId + "-files/";
-            if (Objects.equals(path, "")){
+            if (Objects.equals(path, "")) {
                 fullPath = userPrefix;
             } else {
-                fullPath =  path;
+                fullPath = path;
             }
 
-
-            // Проверяем, что путь начинается с префикса пользователя
             if (!fullPath.startsWith(userPrefix)) {
                 throw new SecurityException("Access denied: You can only access your own files.");
             }
 
-            // Получаем список объектов с префиксом
             Iterable<Result<Item>> results = minioClient.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(bucketName)
                             .prefix(fullPath)
-                            .recursive(false) // Не рекурсивно, чтобы видеть папки
+                            .recursive(false)
                             .build());
 
-            // Собираем список файлов и папок
             for (Result<Item> result : results) {
                 Item item = result.get();
                 filesAndFolders.add(item.objectName().substring(userPrefix.length()));
@@ -217,7 +186,6 @@ public class MinioService {
 
     private void deleteFolderContents(String bucketName, String folderPath) throws Exception {
         try {
-            // Получаем список всех объектов с префиксом
             Iterable<Result<Item>> objects = minioClient.listObjects(
                     ListObjectsArgs.builder()
                             .bucket(bucketName)
@@ -225,7 +193,6 @@ public class MinioService {
                             .recursive(true)
                             .build());
 
-            // Удаляем каждый объект
             for (Result<Item> result : objects) {
                 Item item = result.get();
                 minioClient.removeObject(
@@ -233,10 +200,8 @@ public class MinioService {
                                 .bucket(bucketName)
                                 .object(item.objectName())
                                 .build());
-                System.out.println("Deleted: " + item.objectName());
             }
 
-            System.out.println("Folder deleted: " + folderPath);
         } catch (MinioException e) {
             throw new Exception("Error deleting folder contents from MinIO", e);
         }

@@ -28,16 +28,11 @@ public class HomeController {
                 .getAuthentication()
                 .getPrincipal();
 
-        Long userId = customerUser.getId(); // Получаем ID пользователя
+        Long userId = customerUser.getId();
         System.out.println("userId: " + userId);
 
         try {
-
-
-            // Получаем список файлов и папок
             List<String> filesAndFolders = minioService.listUserFiles(userId, path);
-
-            // Передаем список в шаблон
             model.addAttribute("filesAndFolders", filesAndFolders);
             model.addAttribute("currentPath", path);
         } catch (Exception e) {
