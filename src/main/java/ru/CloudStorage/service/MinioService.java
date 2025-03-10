@@ -3,13 +3,20 @@ package ru.CloudStorage.service;
 import io.minio.*;
 import io.minio.errors.MinioException;
 import io.minio.messages.Item;
+import org.apache.tomcat.util.http.fileupload.FileUploadException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import ru.CloudStorage.exception.CustomIoException;
+import ru.CloudStorage.exception.GeneralException;
+import ru.CloudStorage.exception.MinioFileUploadException;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -24,7 +31,7 @@ public class MinioService {
     @Value("${minio.bucket-name}")
     private String bucketName;
 
-    public void uploadFile(MultipartFile file, Long userId) throws Exception {
+    public void uploadFile(MultipartFile file, Long userId) throws MinioFileUploadException, CustomIoException {
         try (InputStream inputStream = file.getInputStream()) {
 
             boolean found =
@@ -46,7 +53,11 @@ public class MinioService {
                             .contentType(file.getContentType())
                             .build());
         } catch (MinioException e) {
-            throw new Exception("Error uploading file to MinIO", e);
+            throw new MinioFileUploadException("Error uploading file to MinIO: MinioException", e);
+        } catch (IOException e) {
+            throw new CustomIoException("Error uploading file to MinIO: IOException", e);
+        } catch (Exception e) {
+            throw new GeneralException("Unknown Error", e);
         }
     }
 
